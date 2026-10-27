@@ -1,0 +1,12 @@
+{
+  "name": "world-models-robot-grandmas-demos",
+  "private": true,
+  "description": "Small, readable 3D demos from the blog post \"Intro to World Models and Robot Grandmas\"",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "fetch-assets": "node scripts/fetch-assets.mjs",
+    "serve": "node scripts/serve.mjs"
+  }
+}

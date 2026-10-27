@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Robot Grandma</title>
+<!--
+  Robot Grandma: a Unitree G1 humanoid walking with a cane through a Marble apartment, driven by a small neural
+  network trained with reinforcement learning. The physics runs in MuJoCo (WebAssembly) in a background worker;
+  the room is drawn as Gaussian splats with Spark.
+
+  This page only frames the packaged game, which is its own page (assets/robot-grandma/index.html, downloaded by
+  the fetch script). Its readable source code will be added to this repository later.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #121316; color: #f2f2f2; font: 14px/1.45 system-ui, sans-serif; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 10px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+  header h1 { font-size: 16px; margin: 0; }
+  .muted { color: #a9adb5; font-size: 12.5px; }
+  a { color: #8cb8ff; }
+  #game { flex: 1; width: 100%; border: 0; display: block; }
+  #status { margin: auto; padding: 16px; text-align: center; }
+  #status.error { color: #ffb4a8; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Robot Grandma</h1>
+  <span class="muted">Walk her through the apartment and kick the ball. Click the game first, then use the keys
+    (on a phone: the joystick and buttons). Source code coming soon. <a href="index.html">← All demos</a></span>
+</header>
+<div id="status">Loading the game… (about 13 MB, 11 MB on phones)</div>
+<script type="module">
+  import { assetUrl } from './lib/assets.js';
+
+  const status = document.getElementById('status');
+  try {
+    // The game is a whole page; a frame keeps its keys, styles and memory separate from this one.
+    const frame = Object.assign(document.createElement('iframe'), { id: 'game', title: 'Robot Grandma game', allow: 'fullscreen' });
+    frame.src = await assetUrl('robot-grandma');
+    status.replaceWith(frame);
+    frame.focus();
+  } catch (error) {
+    status.className = 'error';
+    status.textContent = `The game couldn't load: ${error.message}`;
+  }
+</script>
+</body>
+</html>

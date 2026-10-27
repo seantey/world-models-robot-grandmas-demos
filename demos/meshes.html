@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Collider vs detailed mesh</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #121316; color: #f2f2f2; font: 14px/1.45 system-ui, sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+  .panel { position: absolute; background: rgba(17, 19, 23, 0.78); border: 1px solid rgba(255, 255, 255, 0.12);
+           border-radius: 10px; padding: 10px 14px; backdrop-filter: blur(6px); z-index: 2; }
+  #about { bottom: 12px; left: 12px; max-width: min(380px, calc(100vw - 56px)); }
+  #about h1 { font-size: 16px; margin: 0 0 4px; }
+  #about p { margin: 0 0 4px; }
+  .muted { color: #a9adb5; font-size: 12.5px; }
+  a { color: #8cb8ff; }
+  #status { top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  #status.error { color: #ffb4a8; max-width: 80vw; }
+  button { font: inherit; color: #f2f2f2; background: #2a2e36; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px;
+           padding: 5px 13px; cursor: pointer; }
+  button[aria-pressed="true"] { background: #e7e9ee; color: #121316; }
+  #trianglesButton { position: absolute; bottom: 12px; right: 12px; z-index: 2; }
+
+  /* The divider: a thin vertical line with a round handle you drag. Its left edge is the split. */
+  #divider { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; z-index: 1; pointer-events: none; }
+  #divider::before { content: ""; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: rgba(255, 255, 255, 0.9); }
+  #dividerHandle { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); pointer-events: auto; touch-action: none;
+                   width: 44px; height: 44px; padding: 0; border: 2px solid #fff; background: rgba(17, 19, 23, 0.72);
+                   font-size: 18px; cursor: ew-resize; }
+  .side-label { position: absolute; top: 12px; z-index: 1; pointer-events: none; font-weight: 600; font-size: 12.5px;
+                background: rgba(17, 19, 23, 0.62); padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  #leftLabel { left: 12px; }
+  #rightLabel { left: 50%; transform: translateX(12px); }
+  [hidden] { display: none !important; }
+  /* Narrow screens: the description card spans the width, so it sits above the triangles button. */
+  @media (max-width: 640px) { #about { bottom: 60px; } }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.min.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="leftLabel" class="side-label" hidden>Collider</div>
+<div id="rightLabel" class="side-label" hidden>Detailed mesh</div>
+<div id="divider" hidden><button id="dividerHandle" aria-label="Drag to move the divider">⟷</button></div>
+<button id="trianglesButton" aria-pressed="false">Show triangles</button>
+<div id="about" class="panel">
+  <h1>The two meshes Marble exports</h1>
+  <p>Left: the rough collider a physics engine uses for floors and walls. Right: the detailed mesh. Both in plain grey clay.</p>
+  <p class="muted">Drag to turn · scroll to zoom · drag the ⟷ handle to compare · <a href="index.html">← All demos</a></p>
+  <p class="muted">Apartment generated with World Labs Marble from photos by Max Vakhtbovych (Pexels), cleaned up by Sean Tey ·
+    <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a></p>
+</div>
+<div id="status" class="panel">Loading the libraries…</div>
+
+<script type="module" onerror="document.getElementById('status').textContent = 'Could not load the 3D libraries.'">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { assetUrl, fetchBytes } from './lib/assets.js';
+
+const statusBox = document.getElementById('status');
+const showStatus = text => { statusBox.hidden = false; statusBox.textContent = text; };
+
+const CLAY_COLOR = 0xc9c3b8;
+const TRIANGLE_LINE_COLOR = 0x23262c;
+// The blog's starting view: from where Marble's panorama was taken, orbiting a point just ahead.
+const START_POSITION = new THREE.Vector3(0, 0, 0);
+const ORBIT_TARGET = new THREE.Vector3(0, 0, -1.2);
+
+// --- Renderer, scene, camera
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#121316');
+const camera = new THREE.PerspectiveCamera(70, 1, 0.02, 200);
+scene.add(camera);   // so the headlight below rides along with the camera
+
+// Clay lighting: soft light from above, plus a lamp on the camera so surfaces facing you read clearly.
+scene.add(new THREE.HemisphereLight(0xffffff, 0x6a655e, 2.0));
+const headlight = new THREE.DirectionalLight(0xffffff, 1.8);
+headlight.position.set(0.4, 0.6, 0);
+headlight.target.position.set(0, 0, -1);
+camera.add(headlight, headlight.target);
+
+camera.position.copy(START_POSITION);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(ORBIT_TARGET);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.rotateSpeed = 0.6;
+controls.minDistance = 0.15;
+controls.maxDistance = 3;
+controls.update();
+
+// --- Each side's mesh is two groups sharing the same triangles:
+// "clay" (solid grey surfaces) and "triangles" (a see-through wireframe drawn on top).
+const sides = {};   // 'left' | 'right' → { clay, triangles }
+let trianglesVisible = false;
+let splitFraction = 0.5;   // where the divider is, from 0 (left edge) to 1 (right edge)
+
+async function loadMesh(name, label, onProgress) {
+  const bytes = await fetchBytes(await assetUrl(name), (loaded, total) => onProgress(label, loaded, total));
+  // Both files are meshopt-compressed; the decoder unpacks them while the glTF loads.
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  const gltf = await loader.parseAsync(bytes.buffer, '');
+  const clayMaterial = new THREE.MeshStandardMaterial({
+    color: CLAY_COLOR, roughness: 0.95, metalness: 0, side: THREE.DoubleSide,
+    // Push the clay back a little so the triangle lines drawn on top of it don't flicker.
+    polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+  });
+  const lineMaterial = new THREE.MeshBasicMaterial({ color: TRIANGLE_LINE_COLOR, wireframe: true, transparent: true, opacity: 0.2, depthWrite: false });
+  const clay = new THREE.Group(), triangles = new THREE.Group();
+  gltf.scene.updateMatrixWorld(true);
+  gltf.scene.traverse(object => {
+    if (!object.isMesh) return;
+    // Lighting needs surface directions (normals); the detailed mesh ships without them.
+    if (!object.geometry.getAttribute('normal')) object.geometry.computeVertexNormals();
+    for (const [group, material] of [[clay, clayMaterial], [triangles, lineMaterial]]) {
+      const mesh = new THREE.Mesh(object.geometry, material);
+      mesh.applyMatrix4(object.matrixWorld);   // keep the file's own placement
+      group.add(mesh);
+    }
+  });
+  for (const group of [clay, triangles]) {
+    group.rotation.x = Math.PI;   // Marble files are stored upside down
+    group.visible = false;        // render() decides which side shows
+    scene.add(group);
+  }
+  return { clay, triangles };
+}
+
+// --- Split screen: one camera, drawn twice per frame. A "scissor" rectangle limits
+// each drawing to one part of the canvas: the collider left of the divider, the detailed mesh right of it.
+function showOnly(sideName) {
+  for (const [name, { clay, triangles }] of Object.entries(sides)) {
+    clay.visible = name === sideName;
+    triangles.visible = name === sideName && trianglesVisible;
+  }
+}
+
+function render() {
+  if (!sides.left || !sides.right) { renderer.render(scene, camera); return; }
+  const size = renderer.getSize(new THREE.Vector2());   // in CSS pixels, like setScissor expects
+  const splitX = Math.round(size.x * splitFraction);
+  renderer.setScissorTest(true);
+  showOnly('left');
+  renderer.setScissor(0, 0, splitX, size.y);
+  renderer.render(scene, camera);
+  showOnly('right');
+  renderer.setScissor(splitX, 0, size.x - splitX, size.y);
+  renderer.render(scene, camera);
+  renderer.setScissorTest(false);
+}
+
+// --- The divider: drag the handle to move the split. Dragging anywhere else turns the camera.
+function setSplit(fraction) {
+  splitFraction = Math.min(0.95, Math.max(0.05, fraction));
+  const percent = `${(splitFraction * 100).toFixed(1)}%`;
+  document.getElementById('divider').style.left = percent;
+  document.getElementById('rightLabel').style.left = percent;
+}
+const handle = document.getElementById('dividerHandle');
+handle.addEventListener('pointerdown', event => {
+  event.preventDefault();
+  handle.setPointerCapture(event.pointerId);   // keep getting moves even if the pointer leaves the handle
+});
+handle.addEventListener('pointermove', event => {
+  if (handle.hasPointerCapture(event.pointerId)) setSplit(event.clientX / window.innerWidth);
+});
+
+const trianglesButton = document.getElementById('trianglesButton');
+trianglesButton.addEventListener('click', () => {
+  trianglesVisible = !trianglesVisible;
+  trianglesButton.setAttribute('aria-pressed', String(trianglesVisible));
+});
+
+// --- Size and draw
+function resize() {
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+renderer.setAnimationLoop(() => {
+  controls.update();
+  render();
+});
+
+// --- Load both meshes, one after the other, showing download progress.
+const megabytes = bytes => (bytes / 1e6).toFixed(1);
+const reportProgress = (label, loaded, total) =>
+  showStatus(total ? `Loading the ${label}… ${megabytes(loaded)} of ${megabytes(total)} MB` : `Loading the ${label}… ${megabytes(loaded)} MB`);
+try {
+  sides.left = await loadMesh('apartment-collider.glb', 'collider', reportProgress);
+  sides.right = await loadMesh('apartment-hq-mesh.glb', 'detailed mesh', reportProgress);
+  statusBox.hidden = true;
+  for (const id of ['leftLabel', 'rightLabel', 'divider']) document.getElementById(id).hidden = false;
+  setSplit(0.5);
+} catch (error) {
+  statusBox.classList.add('error');
+  showStatus(`Couldn't load the meshes: ${error.message}`);
+  console.error(error);
+}
+</script>
+</body>
+</html>

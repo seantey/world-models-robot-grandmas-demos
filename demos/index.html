@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Models and Robot Grandmas: demos</title>
+<style>
+  :root { color-scheme: light dark; --text: #1d1f23; --muted: #5d636e; --bg: #ffffff; --card: #f4f5f7; --link: #2a6bd1; }
+  @media (prefers-color-scheme: dark) { :root { --text: #e8eaee; --muted: #a3a9b4; --bg: #121316; --card: #1c1e23; --link: #7fb0ff; } }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 40px 16px 56px; }
+  h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 8px; }
+  p { color: var(--muted); margin: 0 0 24px; }
+  a { color: var(--link); }
+  ul { list-style: none; padding: 0; margin: 0 0 32px; display: grid; gap: 12px; }
+  li a { display: block; padding: 14px 16px; border-radius: 12px; background: var(--card); text-decoration: none; color: var(--text); }
+  li a strong { display: block; color: var(--link); }
+  li a span { color: var(--muted); font-size: 0.95rem; }
+  footer { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>World Models and Robot Grandmas: demos</h1>
+  <p>Small, readable versions of the 3D demos from the blog post
+    <a href="https://seantey.github.io/world-models-robot-grandmas-blog/intro-to-world-models-n-robot-grandmas-blog.html">Intro to World Models and Robot Grandmas</a>.
+    Each one is a single page: open it, then read its source.</p>
+  <ul>
+    <li><a href="blob.html"><strong>Blob</strong><span>One Gaussian splat: a soft, see-through blob of colour. No download.</span></a></li>
+    <li><a href="cat.html"><strong>Cat</strong><span>A Gaussian Splatting scan, drawn from scratch: decoding, sorting and blending the blobs. 11 MB.</span></a></li>
+    <li><a href="world.html"><strong>Apartment world</strong><span>A world generated with World Labs Marble; fly through it. 8 MB.</span></a></li>
+    <li><a href="meshes.html"><strong>Meshes</strong><span>Marble's collider mesh next to its detailed mesh. 3 MB.</span></a></li>
+    <li><a href="robot.html"><strong>Robot Grandma</strong><span>The game from the post: a robot walking with a cane, physics in MuJoCo, room in splats. 13 MB (11 MB on phones). Source code coming soon.</span></a></li>
+  </ul>
+  <footer>
+    Code: MIT. The cat scan: "Kitty" by Andrej Kurcik, CC BY 4.0. The apartment and its meshes: generated with
+    World Labs Marble from photos by Max Vakhtbovych (Pexels), cleaned up by Sean Tey; CC0, no rights reserved. Details in the repository's
+    <a href="https://github.com/seantey/world-models-robot-grandmas-demos">README and THIRD_PARTY.md</a>.
+  </footer>
+</main>
+</body>
+</html>

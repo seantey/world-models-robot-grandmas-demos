@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Cat: Gaussian splats from scratch</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #121316; color: #eef0f3; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+  canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; }
+  a { color: #9ec5fe; }
+  .overlay { position: fixed; left: 12px; top: 12px; max-width: min(440px, calc(100% - 24px)); padding: 10px 14px;
+             background: rgba(17, 19, 23, 0.72); border-radius: 10px; backdrop-filter: blur(6px); }
+  .overlay h1 { font-size: 16px; margin: 4px 0; }
+  .overlay p { margin: 4px 0; color: #a9afb9; }
+  .credit { font-size: 12px; }
+  .controls { position: fixed; left: 12px; bottom: 12px; display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+              background: rgba(17, 19, 23, 0.72); border-radius: 999px; backdrop-filter: blur(6px); }
+  .controls input { width: min(220px, 40vw); accent-color: #3b74e6; }
+  .controls output { min-width: 3em; text-align: right; font-variant-numeric: tabular-nums; color: #a9afb9; }
+  #status { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; text-shadow: 0 1px 3px #000; }
+  #status.corner { left: auto; right: 12px; top: 12px; transform: none; padding: 5px 11px; border-radius: 999px;
+                   background: rgba(17, 19, 23, 0.72); font-size: 12.5px; text-shadow: none; }
+  #status.error { color: #ff9b9b; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.min.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div class="overlay">
+  <a href="index.html">← All demos</a>
+  <h1>A cat made of Gaussians, drawn from scratch</h1>
+  <p>Hundreds of thousands of soft, see-through ellipsoids, sorted and blended in three.js. Drag to orbit, scroll to zoom.
+     Shrink the blobs to see the individual Gaussians.</p>
+  <p class="credit">"<a href="https://superspl.at/scene/79db08c0">Kitty</a>" by Andrej Kurcik,
+     <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></p>
+</div>
+<div class="controls">
+  <label for="blobSize">Blob size</label>
+  <input id="blobSize" type="range" min="1" max="100" value="100">
+  <output for="blobSize">100%</output>
+</div>
+<div id="status">Loading…</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { assetUrl, fetchBytes } from './lib/assets.js';
+
+// The blog's camera for this scan. The target is in the file's own coordinates; the direction (from the target
+// toward the camera) and the distance are in the scene after the flip below.
+const VIEW_TARGET = new THREE.Vector3(0.3467, -0.1028, -0.1075);
+const VIEW_DIRECTION = new THREE.Vector3(0.8892, 0.2588, 0.3774).normalize();
+const VIEW_DISTANCE = 4.0;
+const TEXTURE_WIDTH = 4096;   // Gaussians per texture row (see the worker)
+
+const statusText = document.getElementById('status');
+
+// ---------------------------------------------------------------------------------------------------------
+// Scene, camera and controls.
+// ---------------------------------------------------------------------------------------------------------
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#121316');
+const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 1000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 0.3;
+controls.maxDistance = 20;
+
+// ---------------------------------------------------------------------------------------------------------
+// The shaders. Every Gaussian is drawn as one small square (two triangles), stretched on screen to cover the
+// ellipse that the 3D Gaussian makes when projected. One square is shared by all Gaussians ("instancing");
+// the per-instance attribute `splatIndex` says which Gaussian an instance draws. Because the worker's sort
+// rewrites `splatIndex`, instance 0 is always the farthest Gaussian and the last instance the nearest.
+// ---------------------------------------------------------------------------------------------------------
+const VERTEX_SHADER = /* glsl */ `
+  uniform sampler2D uCenterAndOpacity, uCovarianceA, uCovarianceB, uColor;
+  uniform vec2 uViewportPixels;
+  uniform float uSizeMultiplier;
+  in float splatIndex;
+  varying vec2 vPositionInSigmas;   // where this pixel is inside the ellipse, in standard deviations
+  varying vec4 vColor;
+
+  vec4 fetchTexel(sampler2D source, int index) {
+    return texelFetch(source, ivec2(index % ${TEXTURE_WIDTH}, index / ${TEXTURE_WIDTH}), 0);
+  }
+
+  void main() {
+    int index = int(splatIndex);
+    vec4 centerAndOpacity = fetchTexel(uCenterAndOpacity, index);
+    vec4 a = fetchTexel(uCovarianceA, index), b = fetchTexel(uCovarianceB, index);
+    // The 3x3 covariance (symmetric). Scaling every axis by k scales the covariance by k².
+    mat3 covariance3D = mat3(a.x, a.y, a.z,
+                             a.y, a.w, b.x,
+                             a.z, b.x, b.y) * (uSizeMultiplier * uSizeMultiplier);
+
+    vec4 center = modelViewMatrix * vec4(centerAndOpacity.xyz, 1.0);   // camera space; camera looks down -z
+    float depth = -center.z;
+    vec2 slope = center.xy / depth;
+    // Skip Gaussians behind the camera or well outside the view (the approximation below breaks down there).
+    if (depth < 0.001 || abs(slope.x) > 1.3 / projectionMatrix[0][0] || abs(slope.y) > 1.3 / projectionMatrix[1][1]) {
+      gl_Position = vec4(0.0, 0.0, 2.0, 1.0);   // outside the clip volume: nothing is drawn
+      return;
+    }
+
+    // --- The 2D footprint: how the 3D Gaussian looks on screen (the "EWA splatting" approximation). ---
+    // Perspective is not linear, but near the Gaussian's center it is nearly so. J is that local linear
+    // version of "camera space -> pixels" (the Jacobian of the projection); focal lengths are in pixels.
+    float focalX = projectionMatrix[0][0] * uViewportPixels.x * 0.5;
+    float focalY = projectionMatrix[1][1] * uViewportPixels.y * 0.5;
+    mat3 J = mat3(focalX / depth, 0.0, 0.0,                              // GLSL matrices are column by column
+                  0.0, focalY / depth, 0.0,
+                  focalX * slope.x / depth, focalY * slope.y / depth, 0.0);
+    // A linear map M turns covariance Σ into M Σ Mᵀ. Here M = J · (rotation part of model-view).
+    mat3 T = J * mat3(modelViewMatrix);
+    mat3 covariance2D = T * covariance3D * transpose(T);
+
+    // The 2D covariance [[a, b], [b, c]] is an ellipse. Its eigenvalues are the variances along the ellipse's
+    // long and short axes. The +0.3 adds a little blur so tiny Gaussians stay about a pixel wide.
+    float ca = covariance2D[0][0] + 0.3, cb = covariance2D[0][1], cc = covariance2D[1][1] + 0.3;
+    float middle = 0.5 * (ca + cc);
+    float radius = length(vec2(0.5 * (ca - cc), cb));
+    float majorVariance = middle + radius;
+    float minorVariance = max(middle - radius, 0.1);
+    vec2 majorDirection = abs(cb) < 1e-6 ? (ca >= cc ? vec2(1.0, 0.0) : vec2(0.0, 1.0))
+                                         : normalize(vec2(cb, majorVariance - ca));
+    vec2 minorDirection = vec2(-majorDirection.y, majorDirection.x);
+    // The square reaches 3 standard deviations out along each axis; beyond that a Gaussian is invisible.
+    vec2 majorAxisPixels = majorDirection * sqrt(majorVariance) * 3.0;
+    vec2 minorAxisPixels = minorDirection * sqrt(minorVariance) * 3.0;
+
+    // Place this corner of the square: the projected center, pushed out along the ellipse's axes.
+    // (position.xy is a corner of the unit square, -1..1. Pixels -> clip units: divide by half the viewport.)
+    vec4 clip = projectionMatrix * center;
+    clip.xy += (position.x * majorAxisPixels + position.y * minorAxisPixels) / (uViewportPixels * 0.5) * clip.w;
+    gl_Position = clip;
+    vPositionInSigmas = position.xy * 3.0;
+    vColor = vec4(max(fetchTexel(uColor, index).rgb, 0.0), centerAndOpacity.w);
+  }
+`;
+
+const FRAGMENT_SHADER = /* glsl */ `
+  varying vec2 vPositionInSigmas;
+  varying vec4 vColor;
+  void main() {
+    // The Gaussian bell curve: full opacity at the center, fading as exp(-d²/2) with distance d in sigmas.
+    float alpha = min(0.99, vColor.a * exp(-0.5 * dot(vPositionInSigmas, vPositionInSigmas)));
+    if (alpha < 1.0 / 255.0) discard;
+    gl_FragColor = vec4(vColor.rgb, alpha);   // colors are already display (sRGB) values
+  }
+`;
+
+const uniforms = {
+  uCenterAndOpacity: { value: null }, uCovarianceA: { value: null }, uCovarianceB: { value: null }, uColor: { value: null },
+  uViewportPixels: { value: new THREE.Vector2(1, 1) }, uSizeMultiplier: { value: 1 },
+};
+let splatMesh = null;
+
+// Turns one packed array from the worker into a float texture the shader can read texel by texel.
+function makeDataTexture(data) {
+  const texture = new THREE.DataTexture(data, TEXTURE_WIDTH, data.length / 4 / TEXTURE_WIDTH, THREE.RGBAFormat, THREE.FloatType);
+  texture.minFilter = texture.magFilter = THREE.NearestFilter;   // exact values, no blending between texels
+  texture.needsUpdate = true;
+  return texture;
+}
+
+// Builds (or replaces) the mesh that draws all Gaussians from the worker's decoded data.
+function buildSplatMesh(decoded) {
+  if (splatMesh) {
+    scene.remove(splatMesh);
+    splatMesh.geometry.dispose();
+    splatMesh.material.dispose();
+    for (const name of ['uCenterAndOpacity', 'uCovarianceA', 'uCovarianceB', 'uColor']) uniforms[name].value.dispose();
+  }
+  uniforms.uCenterAndOpacity.value = makeDataTexture(decoded.centerAndOpacity);
+  uniforms.uCovarianceA.value = makeDataTexture(decoded.covarianceA);
+  uniforms.uCovarianceB.value = makeDataTexture(decoded.covarianceB);
+  uniforms.uColor.value = makeDataTexture(decoded.color);
+
+  const geometry = new THREE.InstancedBufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], 3));
+  geometry.setIndex([0, 1, 2, 0, 2, 3]);
+  // Until the first sort arrives, draw in file order.
+  const order = new Float32Array(decoded.count).map((_, i) => i);
+  geometry.setAttribute('splatIndex', new THREE.InstancedBufferAttribute(order, 1).setUsage(THREE.DynamicDrawUsage));
+  geometry.instanceCount = decoded.count;
+
+  splatMesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
+    uniforms, vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER,
+    // Blended back to front in sorted order, so the depth buffer is neither needed nor wanted.
+    transparent: true, depthTest: false, depthWrite: false,
+  }));
+  splatMesh.frustumCulled = false;   // three.js can't know the bounds; the shader skips off-screen Gaussians
+  // The scan is stored upside down (a common convention in splat files): turn it half a turn around x.
+  splatMesh.rotation.x = Math.PI;
+  scene.add(splatMesh);
+  lastSortedModelView = null;   // the new data needs a fresh sort
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The worker: decoding and depth sorting off the main thread.
+// ---------------------------------------------------------------------------------------------------------
+const worker = new Worker(new URL('./cat-splat-worker.js', import.meta.url));
+let pendingDecode = null;
+let sortInFlight = false;
+let lastSortedModelView = null;
+
+worker.onmessage = ({ data: message }) => {
+  if (message.type === 'sorted') {
+    sortInFlight = false;
+    const orderAttribute = splatMesh?.geometry.getAttribute('splatIndex');
+    // Ignore a sort for the previous file (it would have a different number of Gaussians).
+    if (orderAttribute && orderAttribute.array.length === message.order.length) {
+      orderAttribute.array = message.order;
+      orderAttribute.needsUpdate = true;
+    }
+  } else if (message.type === 'decoded') pendingDecode.resolve(message);
+  else if (message.type === 'error') pendingDecode.reject(new Error(message.message));
+};
+
+function decodeInWorker(bytes) {
+  return new Promise((resolve, reject) => {
+    pendingDecode = { resolve, reject };
+    worker.postMessage({ type: 'decode', bytes, textureWidth: TEXTURE_WIDTH }, [bytes.buffer]);
+  });
+}
+
+// Ask for a new back-to-front order when the camera has moved enough, one sort at a time. Only the
+// "depth" row of the model-view matrix matters for sorting, so only that row is compared.
+function requestSortIfNeeded() {
+  if (!splatMesh || sortInFlight) return;
+  const modelView = new THREE.Matrix4().multiplyMatrices(camera.matrixWorldInverse, splatMesh.matrixWorld).elements;
+  if (lastSortedModelView) {
+    let change = 0;
+    for (const k of [2, 6, 10, 14]) change += Math.abs(modelView[k] - lastSortedModelView[k]);
+    if (change < 0.002) return;
+  }
+  lastSortedModelView = modelView.slice();
+  sortInFlight = true;
+  worker.postMessage({ type: 'sort', modelView });
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Camera placement, resizing, the slider and the render loop.
+// ---------------------------------------------------------------------------------------------------------
+function placeCamera() {
+  splatMesh.updateMatrixWorld();
+  const target = VIEW_TARGET.clone().applyMatrix4(splatMesh.matrixWorld);   // file coordinates -> scene
+  // The blog's distance is for a 16:10 view; taller windows sit a little further back so the cat still fits.
+  const distance = VIEW_DISTANCE * Math.max(1, 1.6 / camera.aspect);
+  controls.target.copy(target);
+  camera.position.copy(target).addScaledVector(VIEW_DIRECTION, distance);
+  controls.update();
+}
+
+function resize() {
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.getDrawingBufferSize(uniforms.uViewportPixels.value);   // the shader works in real pixels
+}
+window.addEventListener('resize', resize);
+resize();
+
+const blobSizeSlider = document.getElementById('blobSize');
+blobSizeSlider.addEventListener('input', () => {
+  uniforms.uSizeMultiplier.value = blobSizeSlider.value / 100;
+  document.querySelector('output[for="blobSize"]').textContent = `${blobSizeSlider.value}%`;
+});
+
+renderer.setAnimationLoop(() => {
+  controls.update();
+  camera.updateMatrixWorld();
+  requestSortIfNeeded();
+  renderer.render(scene, camera);
+});
+
+// ---------------------------------------------------------------------------------------------------------
+// Loading: a small preview file (100k Gaussians) first so something shows quickly, then the full scan.
+// ---------------------------------------------------------------------------------------------------------
+async function loadScan(fileName, label) {
+  const bytes = await fetchBytes(await assetUrl(fileName), (loaded, total) => {
+    const megabytes = n => (n / 1e6).toFixed(1);
+    statusText.textContent = `Loading ${label}: ${megabytes(loaded)}${total ? ` of ${megabytes(total)}` : ''} MB`;
+  });
+  statusText.textContent = `Unpacking ${label}…`;
+  buildSplatMesh(await decodeInWorker(bytes));
+}
+
+try {
+  await loadScan('kitty-preview.spz', 'preview');
+  placeCamera();
+  statusText.classList.add('corner');   // the cat is visible now; keep the progress out of its way
+  await loadScan('kitty-default.spz', 'full scan');
+  statusText.hidden = true;
+} catch (error) {
+  statusText.className = 'error';   // centered and red
+  statusText.textContent = `Couldn't load the cat: ${error.message}`;
+}
+</script>
+</body>
+</html>

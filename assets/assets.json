@@ -1,0 +1,352 @@
+{
+  "note": "Generated from the blog's publishing bundle. Each file is downloaded from base_url + \"/\" + path (a folder's files from base_url + \"/\" + folder path + \"/\" + file path) and checked against sha256.",
+  "base_url": "https://assets.seanteyyy.xyz/world-models-robot-grandmas-blog",
+  "files": [
+    {
+      "name": "kitty-preview.spz",
+      "path": "assets/3d/kitty-preview-fd29dcbdbc.spz",
+      "bytes": 1722787,
+      "sha256": "fd29dcbdbcfb810ee62afce4d787fa8bcf3fdf4faccdf59d4a107de74b44f69a",
+      "licence": "CC BY 4.0",
+      "credit": "\"Kitty\" by Andrej Kurcik (https://superspl.at/scene/79db08c0), reduced to 100k splats"
+    },
+    {
+      "name": "kitty-default.spz",
+      "path": "assets/3d/kitty-default-2614e18b4e.spz",
+      "bytes": 9172962,
+      "sha256": "2614e18b4ecfc2f7d6f72846ac4b83fa87f9b6754b7b55411c0f78929a99eafb",
+      "licence": "CC BY 4.0",
+      "credit": "\"Kitty\" by Andrej Kurcik (https://superspl.at/scene/79db08c0), compressed"
+    },
+    {
+      "name": "apartment-world.spz",
+      "path": "assets/3d/apartment-world-500k-v2-bf5c832f72.spz",
+      "bytes": 7526974,
+      "sha256": "bf5c832f7210dfd08271be5bb1c4001f12ab72685777c6f343e98c31f95f915f",
+      "licence": "CC0 1.0",
+      "credit": "Generated with World Labs Marble from photos by Max Vakhtbovych (Pexels); cleaned up by Sean Tey"
+    },
+    {
+      "name": "apartment-collider.glb",
+      "path": "assets/3d/apartment-collider-v2-9666354f60.glb",
+      "bytes": 937752,
+      "sha256": "9666354f607a342e1ff2c99406d813ca68f3735ec8524e5cf8bfe92cc9e80ac7",
+      "licence": "CC0 1.0",
+      "credit": "Generated with World Labs Marble (collider mesh); compressed by Sean Tey"
+    },
+    {
+      "name": "apartment-hq-mesh.glb",
+      "path": "assets/3d/apartment-hq-mesh-clay-v2-e4cc98ebed.glb",
+      "bytes": 2365124,
+      "sha256": "e4cc98ebede7efbc9035e2c15abc14db20732f0807e42c2dcd68648421a2e9d2",
+      "licence": "CC0 1.0",
+      "credit": "Generated with World Labs Marble (high-quality mesh); compressed, texture removed by Sean Tey"
+    }
+  ],
+  "folders": [
+    {
+      "name": "robot-grandma",
+      "path": "widgets/robot-grandma-8dfcd7cf38",
+      "bytes": 30968321,
+      "licence": "Code MIT; the room CC0 1.0; bundled libraries and robot model: see LICENSES/ inside the folder",
+      "credit": "Robot Grandma game by Sean Tey (packaged build); Unitree G1 model, MuJoCo, mjlab, three.js, Spark",
+      "files": [
+        {
+          "path": "BUILD.txt",
+          "bytes": 763,
+          "sha256": "916fdf64cd532d584311a3b69ae29eb77e51cfd59fac5d827fc0481908bf876e"
+        },
+        {
+          "path": "LICENSES/MuJoCo-Apache-2.0.txt",
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "LICENSES/README.txt",
+          "bytes": 830,
+          "sha256": "6276774530bdf25f629431da67ac7e5ea26467d9497647c47787886f69380479"
+        },
+        {
+          "path": "LICENSES/Spark-MIT.txt",
+          "bytes": 1088,
+          "sha256": "51829693e5dccd9ca1daa093991faac3aaa93238eb8fd5f5cb4130af85791d64"
+        },
+        {
+          "path": "LICENSES/Unitree-G1-BSD-3-Clause.txt",
+          "bytes": 1558,
+          "sha256": "84aac59fd3246e3ddc49d1387644e8fcf43b0def4f0b9fe687f372e90446df2d"
+        },
+        {
+          "path": "LICENSES/meshoptimizer-MIT.txt",
+          "bytes": 1079,
+          "sha256": "f03037ca7bad1e3eb7f4a63fa6084a8baabd5ba30d3c239a9a7f35705d873e26"
+        },
+        {
+          "path": "LICENSES/mjlab-Apache-2.0.txt",
+          "bytes": 11352,
+          "sha256": "8ca04d9dbbccd20f0f1842fb33e13949f9e57064b150dad36af8e7a751ca3321"
+        },
+        {
+          "path": "LICENSES/three.js-MIT.txt",
+          "bytes": 1081,
+          "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
+        },
+        {
+          "path": "_headers",
+          "bytes": 937,
+          "sha256": "4a27008aca1b3539911c14ecdf58c401c1e7dd0c698bfa2e973cb3d971386ab9"
+        },
+        {
+          "path": "g/code-63ddc15482/src/aim.js",
+          "bytes": 5194,
+          "sha256": "ae7cc55fb61e687bfca42d1dd0d7e82b79be89f8bd5525041bd32764d77fbce4"
+        },
+        {
+          "path": "g/code-63ddc15482/src/arc.js",
+          "bytes": 3677,
+          "sha256": "2a3dd39fec61bb7b8ae81dc5538e23cdb5bdb6d44e772099e98510331016cc52"
+        },
+        {
+          "path": "g/code-63ddc15482/src/bumper.js",
+          "bytes": 17219,
+          "sha256": "1734c4dde58cca75038a0a0fb1b5ce2dbba48a74183cc04b03fa291a359a0ea8"
+        },
+        {
+          "path": "g/code-63ddc15482/src/camera.js",
+          "bytes": 19346,
+          "sha256": "6058cca597b53e7af942bb6bfceb252d16e49154f3871e706211d81b1614cdf2"
+        },
+        {
+          "path": "g/code-63ddc15482/src/controls.js",
+          "bytes": 9585,
+          "sha256": "d613c281d777e59a29807bf51ee38e95ce17232f27813bd0f9dc9c8e5b237e22"
+        },
+        {
+          "path": "g/code-63ddc15482/src/freekick.js",
+          "bytes": 52709,
+          "sha256": "c0830789e1fc5be128f4ddce22d1b9e6ae5a585545904ac949f9841ed818531d"
+        },
+        {
+          "path": "g/code-63ddc15482/src/game.js",
+          "bytes": 62421,
+          "sha256": "e072629d44831e730a37c22bb1c2c194c2f871b1cd86a88a8e8ddb9c1e0c087d"
+        },
+        {
+          "path": "g/code-63ddc15482/src/jets.js",
+          "bytes": 11101,
+          "sha256": "10ab6b8674567c6b3f16fb358ca57354551c708007a0c5c36bd107467b16ec42"
+        },
+        {
+          "path": "g/code-63ddc15482/src/kickgame.js",
+          "bytes": 56807,
+          "sha256": "7a7623b3d1f73525ffee1d0169dd03555b6d2b9236f28406ef9b7e9f2fd4f228"
+        },
+        {
+          "path": "g/code-63ddc15482/src/look.js",
+          "bytes": 34000,
+          "sha256": "40a3c512c5f46b2041c07a1a4b0e991e7eb5f67d5f169def37809f657aec4124"
+        },
+        {
+          "path": "g/code-63ddc15482/src/lsq.js",
+          "bytes": 2085,
+          "sha256": "5b0b3ee492e762a82ae056e9d746b6b8960d23c7038286ba1b9bfb39c60a1a3b"
+        },
+        {
+          "path": "g/code-63ddc15482/src/moves.js",
+          "bytes": 9872,
+          "sha256": "5d4b532bae8f324f6e825cd6120042ca002cc7dc940e006a45d50d16bcfb1818"
+        },
+        {
+          "path": "g/code-63ddc15482/src/render.js",
+          "bytes": 31557,
+          "sha256": "d02fb65939b1e0119afe0f7fdb8e2731a7d06e03f1b347b3fa4920e15c4ef7f0"
+        },
+        {
+          "path": "g/code-63ddc15482/src/sim.js",
+          "bytes": 17174,
+          "sha256": "1c001fc5fc4af6149e989243678a1a3e5a6a23b7c2b7bed856beeb0667ee8602"
+        },
+        {
+          "path": "g/code-63ddc15482/src/slowwalker.js",
+          "bytes": 13055,
+          "sha256": "622dc4be35ee67536ffb3984135d55668a6f062db7c680f41f95a077ebbb643a"
+        },
+        {
+          "path": "g/code-63ddc15482/src/soccerball.js",
+          "bytes": 5322,
+          "sha256": "c7fb3d73ae2d9ff8a945b0c23c291506ac6247fa8b9d94b635fc648a5368542e"
+        },
+        {
+          "path": "g/code-63ddc15482/src/stand.js",
+          "bytes": 1347,
+          "sha256": "8d48c7ba978e49016e2f63e904e2dfcae979ba9269eb757b65e06e2b62fd4fb8"
+        },
+        {
+          "path": "g/code-63ddc15482/src/trainedwalker.js",
+          "bytes": 23034,
+          "sha256": "0115910369e93a14001936634b0ce7d38f35d4044b4b5c12e667c51f4583989d"
+        },
+        {
+          "path": "g/code-63ddc15482/src/transition.js",
+          "bytes": 2287,
+          "sha256": "c4331d5ab8f022a131b3cce66b34b24c9fef93d6a26f7f0e8cde0ab62a38b114"
+        },
+        {
+          "path": "g/code-63ddc15482/src/ui-embed.js",
+          "bytes": 1325,
+          "sha256": "97e2998215a687d24748dc0546189482964142c4fca05bc739b7b3be255c902a"
+        },
+        {
+          "path": "g/code-63ddc15482/src/ui.js",
+          "bytes": 16478,
+          "sha256": "6cbfc06b19b1219fd1de559103eaca003579ed999c7a9d60225d20b694eca9ca"
+        },
+        {
+          "path": "g/code-63ddc15482/src/wbc.js",
+          "bytes": 10341,
+          "sha256": "c40babcf580b12e56777077c216df0f26a544188fc82575d33ca6cb3b1f1a2e8"
+        },
+        {
+          "path": "g/code-63ddc15482/ui.css",
+          "bytes": 10430,
+          "sha256": "5c51f4cb6fa82b071b4d1a36986dbd64f0417ac1ef8e08803599a4f4c1c8fe29"
+        },
+        {
+          "path": "g/data-34417d4e27/g1-hands-visual.rgmp",
+          "bytes": 225977,
+          "sha256": "da9c60f38daba48a589080542dd96fa85470ba25e5996302f208eebd613bad9b"
+        },
+        {
+          "path": "g/data-34417d4e27/gait-library.json",
+          "bytes": 670836,
+          "sha256": "0aea80345895532bff13203a4b8888a71131d4a1510f31d8c8070e375197b109"
+        },
+        {
+          "path": "g/data-34417d4e27/kick-right.json",
+          "bytes": 204334,
+          "sha256": "529c0b280f6aa0eeae3e0eca6989194dd89c3752020288e7704bb2b0ea1322a6"
+        },
+        {
+          "path": "g/data-34417d4e27/room.json",
+          "bytes": 89260,
+          "sha256": "381d76eb9a5eb8725285f63ad712495a4633d914efb8a6d945f4d6f543447b0d"
+        },
+        {
+          "path": "g/data-34417d4e27/scene.xml",
+          "bytes": 79626,
+          "sha256": "d6e03430b0d5812383eafcb7208b636a41c9323d93d0323254fa2e5189bd6fc2"
+        },
+        {
+          "path": "g/data-34417d4e27/transition.json",
+          "bytes": 43238,
+          "sha256": "1c6acab82d11ee7a50c5e6beb20092370e66106e021108c8d31f3e13c08fee06"
+        },
+        {
+          "path": "g/data-34417d4e27/walker-data.json",
+          "bytes": 11874,
+          "sha256": "6c1e24f7e650f4418ca24ce62e395bc48d2eacab0f7b735ad99c695ebbf6b022"
+        },
+        {
+          "path": "g/data-34417d4e27/walkers/20261026-2312-g1-unified-u1p18-128100/policy-weights.bin",
+          "bytes": 987992,
+          "sha256": "68ab6a9f052bb415fa05acdfc455a36b954da32d47a01e9455c871871dc4c471"
+        },
+        {
+          "path": "g/data-34417d4e27/walkers/20261026-2312-g1-unified-u1p18-128100/policy-weights.json",
+          "bytes": 2368,
+          "sha256": "c041fb359e0ba951d45e1184abbc2c498f9c8b8ea82dedfd278d1be36f92d703"
+        },
+        {
+          "path": "g/data-34417d4e27/walkers/20261026-2312-g1-unified-u1p18-128100/policy.json",
+          "bytes": 31712,
+          "sha256": "d85057333cec6e9c85a5e709526ab63844d3bc94978e061f4e33f415790319ca"
+        },
+        {
+          "path": "g/mujoco-8c8938e934/mujoco.js",
+          "bytes": 293619,
+          "sha256": "a5d5f00c4c16d327cf8275f88ddd47c857a5e9baec8ca4174d676fe299267a0c"
+        },
+        {
+          "path": "g/mujoco-8c8938e934/mujoco.wasm",
+          "bytes": 10370402,
+          "sha256": "d59c489dd521c80af6965756c5b90daff549fa281566544e4540c170d937633d"
+        },
+        {
+          "path": "g/room-30364a224f/layout/objects.json",
+          "bytes": 10881,
+          "sha256": "03cd8b0746ee90a9f658eaa28a92e474f9862af1ccc93f5dafd378e926de773d"
+        },
+        {
+          "path": "g/room-30364a224f/room-light/room-400k.spz",
+          "bytes": 5735334,
+          "sha256": "e1690c2241ccb25b97b6c301477663dd9fd5a28ac021c2a5bc19500a8c2a3a5e"
+        },
+        {
+          "path": "g/room-30364a224f/splat-rounds/round-03/objects/best-stool-500k.spz",
+          "bytes": 45372,
+          "sha256": "0677fe787b90d19e3150e5c6d284f89e48a24a21c06351d161eed4b51a4bb85f"
+        },
+        {
+          "path": "g/room-30364a224f/splat-rounds/round-03/objects/pendant-500k.spz",
+          "bytes": 20736,
+          "sha256": "8cd8e17dea9e645f2c19a049908c8283ca35d1232852dec656c758f3c23e5af2"
+        },
+        {
+          "path": "g/room-30364a224f/splat-rounds/round-03/objects/tv-screen-500k.spz",
+          "bytes": 40763,
+          "sha256": "0c175f7a0f0652ab49e999249a87f8740c94559219ce92e493e2935dc59035a6"
+        },
+        {
+          "path": "g/room-30364a224f/splat-rounds/round-03/room-500k.spz",
+          "bytes": 7898892,
+          "sha256": "8e765c473c0c202bfcd0f760dbd50569c512d2aa4fdd2fb79a29a729210d7311"
+        },
+        {
+          "path": "g/spark-1b67d1027e/spark.module.min.js",
+          "bytes": 2852378,
+          "sha256": "a2f01f68dbcd5e060d55348f803e509fc789b97904e01b98763fcf0314351aaf"
+        },
+        {
+          "path": "g/three-b37f973bbf/build/three.core.min.js",
+          "bytes": 385386,
+          "sha256": "05b2609338c76cd65daf74f3ac515bc9a5045e1b3b33edc07d8c9bd55250fa90"
+        },
+        {
+          "path": "g/three-b37f973bbf/build/three.module.min.js",
+          "bytes": 365552,
+          "sha256": "86bcee248b64f44bcfc23c331ae74619061957d59cab040171dcb6fb5900beb6"
+        },
+        {
+          "path": "g/three-b37f973bbf/examples/jsm/libs/fflate.module.js",
+          "bytes": 89384,
+          "sha256": "209a4412eb48ce609edb4391992a792ffcc3983d30ee7e2b0b89a8c470f3cd8a"
+        },
+        {
+          "path": "g/three-b37f973bbf/examples/jsm/libs/meshopt_decoder.module.js",
+          "bytes": 29256,
+          "sha256": "d428e73a000057c6c94bfcedc3412d0c2dc14ca8800e88553aab05113ad2bf19"
+        },
+        {
+          "path": "g/three-b37f973bbf/examples/jsm/postprocessing/Pass.js",
+          "bytes": 4218,
+          "sha256": "444b409c235ead986893c472e720da1b779a56985c7d10b279c7944b52bd61c5"
+        },
+        {
+          "path": "index.html",
+          "bytes": 9781,
+          "sha256": "28dca61dbea746e4d1d752d5c1c109c073f733a3119a580753f259c46386da02"
+        },
+        {
+          "path": "manifest.json",
+          "bytes": 20954,
+          "sha256": "ce7ef95141ee6eb52ce88c1e8816ff0a5a7d9c11ed602e757389d5416dd02db5"
+        },
+        {
+          "path": "probe.js",
+          "bytes": 1784,
+          "sha256": "0ba64894a8c35868c1bf0fead7ba9e581309a98a767413e1cd8ab996dc866413"
+        }
+      ]
+    }
+  ]
+}

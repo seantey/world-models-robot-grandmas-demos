@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>One Gaussian splat</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #121316; color: #f2f2f2; font: 14px/1.45 system-ui, sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+  .panel { position: absolute; background: rgba(17, 19, 23, 0.78); border: 1px solid rgba(255, 255, 255, 0.12);
+           border-radius: 10px; padding: 10px 14px; backdrop-filter: blur(6px); }
+  #about { top: 12px; left: 12px; max-width: min(360px, calc(100vw - 56px)); }
+  #about h1 { font-size: 16px; margin: 0 0 4px; }
+  #about p { margin: 0 0 4px; }
+  .muted { color: #a9adb5; font-size: 12.5px; }
+  a { color: #8cb8ff; }
+  #formula { top: 12px; right: 12px; font-size: 13px; }
+  #formula .math { font: 15px/1.6 'Times New Roman', serif; white-space: nowrap; }
+  #controls { bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+              width: max-content; max-width: calc(100vw - 56px); }
+  button { font: inherit; color: #f2f2f2; background: #2a2e36; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px;
+           padding: 5px 13px; cursor: pointer; }
+  button[aria-pressed="true"] { background: #e7e9ee; color: #121316; }
+  /* Narrow screens: the buttons wrap onto two rows, so the formula sits above them. */
+  @media (max-width: 640px) { #formula { top: auto; bottom: 112px; right: 12px; } }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.min.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="about" class="panel">
+  <h1>One Gaussian splat</h1>
+  <p>A soft, see-through blob of colour. A splat world is millions of these.</p>
+  <p class="muted">Drag to turn it · scroll to zoom · <a href="index.html">← All demos</a></p>
+</div>
+<div id="formula" class="panel">
+  <div class="muted">How see-through the blob is at a point <i>x</i>:</div>
+  <div class="math">α(<i>x</i>) = <i>o</i> · exp(−½ (<i>x</i>−μ)<sup>T</sup> Σ<sup>−1</sup> (<i>x</i>−μ))</div>
+  <div class="muted">widths <span id="widths"></span></div>
+</div>
+<div id="controls" class="panel">
+  <button data-preset="ball">Ball</button>
+  <button data-preset="pancake">Pancake</button>
+  <button data-preset="needle">Needle</button>
+  <button data-toggle="outline">Outline</button>
+  <button data-toggle="angleColor">Colour by angle</button>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ---------------------------------------------------------------------------
+// What one splat stores (the same numbers a real .spz/.ply file stores per blob):
+//   position μ    where its centre is (here: the origin)
+//   scale         three widths, one per axis of the blob's own ellipsoid
+//   rotation      how that ellipsoid is turned
+//   opacity o     how solid its centre is
+//   colour        here a front colour and a back colour; real files use
+//                 "spherical harmonics" to vary colour smoothly with angle
+// ---------------------------------------------------------------------------
+const PRESETS = {
+  ball:    { widths: [0.5, 0.5, 0.5],   tiltDegrees: 0,  turnDegrees: 0 },
+  pancake: { widths: [0.8, 0.04, 0.6],  tiltDegrees: 15, turnDegrees: 30 },
+  needle:  { widths: [1.0, 0.04, 0.04], tiltDegrees: 25, turnDegrees: -20 },
+};
+const blob = {
+  widths: new THREE.Vector3(), rotation: new THREE.Quaternion(), opacity: 0.9,
+  frontColor: new THREE.Color('#ff7a45'), backColor: new THREE.Color('#3b7bff'),
+};
+const options = { preset: 'ball', outline: true, angleColor: true };
+
+// --- Scene, camera, drag-to-turn -------------------------------------------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#121316');
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+camera.position.set(2.4, 1.5, 3.2);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 0.15;
+controls.maxDistance = 12;
+const floorGrid = new THREE.GridHelper(10, 20, 0x4a5262, 0x262b34);
+floorGrid.position.y = -1.6;
+scene.add(floorGrid);
+
+// --- The splat shader --------------------------------------------------------
+// A 3D Gaussian is drawn as a flat 2D ellipse facing the camera. The vertex shader
+// works out that ellipse; the fragment shader fades each pixel by the bell curve.
+const uniforms = {
+  uCovariance3D: { value: new THREE.Matrix3() },   // Σ: the blob's 3D shape (see applyShape)
+  uViewportPixels: { value: new THREE.Vector2(1, 1) },
+  uFrontColor: { value: new THREE.Color() },
+  uBackColor: { value: new THREE.Color() },
+  uBlobForward: { value: new THREE.Vector3() },    // which way the blob's "front" points
+  uAngleColorAmount: { value: 1 },
+  uOpacity: { value: 1 },
+};
+const splatMaterial = new THREE.ShaderMaterial({
+  uniforms, transparent: true, depthTest: false, depthWrite: false,
+  vertexShader: /* glsl */ `
+    uniform mat3 uCovariance3D;
+    uniform vec2 uViewportPixels;
+    uniform vec3 uFrontColor, uBackColor, uBlobForward;
+    uniform float uAngleColorAmount;
+    varying vec2 vPositionInSigmas;   // where this pixel sits inside the ellipse, in standard deviations
+    varying vec3 vColor;
+    void main() {
+      // 1. Position: the blob's centre (the origin) seen from the camera.
+      vec4 centerInCamera = viewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+      float depth = -centerInCamera.z;
+      if (depth < 0.001) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }   // behind the camera
+
+      // 2. Shape: squash the 3D covariance Σ onto the screen, Σ' = J W Σ Wᵀ Jᵀ.
+      //    W turns world directions into camera directions; J is the perspective
+      //    projection near the centre, simplified to a straight-line (linear) map.
+      float focalX = projectionMatrix[0][0] * uViewportPixels.x * 0.5;
+      float focalY = projectionMatrix[1][1] * uViewportPixels.y * 0.5;
+      vec2 slope = centerInCamera.xy / depth;
+      mat3 J = mat3(focalX / depth, 0.0, 0.0,
+                    0.0, focalY / depth, 0.0,
+                    focalX * slope.x / depth, focalY * slope.y / depth, 0.0);
+      mat3 W = mat3(viewMatrix);
+      mat3 covariance2D = (J * W) * uCovariance3D * transpose(J * W);
+
+      // 3. The 2D covariance is an ellipse; its eigenvectors are the ellipse's axes
+      //    and the square roots of its eigenvalues are the axis lengths (one σ, in pixels).
+      float a = covariance2D[0][0] + 0.3, b = covariance2D[0][1], c = covariance2D[1][1] + 0.3;
+      float middle = 0.5 * (a + c), radius = length(vec2(0.5 * (a - c), b));
+      float majorVariance = middle + radius, minorVariance = max(middle - radius, 0.1);
+      vec2 majorDirection = abs(b) < 1e-6 ? (a >= c ? vec2(1.0, 0.0) : vec2(0.0, 1.0))
+                                          : normalize(vec2(b, majorVariance - a));
+      vec2 minorDirection = vec2(-majorDirection.y, majorDirection.x);
+
+      // 4. Stretch the square (corners at ±1) to cover the ellipse out to 3 σ,
+      //    where the bell curve has faded to almost nothing.
+      vec2 offsetPixels = position.x * majorDirection * sqrt(majorVariance) * 3.0
+                        + position.y * minorDirection * sqrt(minorVariance) * 3.0;
+      vec4 clip = projectionMatrix * centerInCamera;
+      clip.xy += offsetPixels / (uViewportPixels * 0.5) * clip.w;
+      gl_Position = clip;
+      vPositionInSigmas = position.xy * 3.0;
+
+      // 5. Colour by viewing angle: blend front → back colour as the camera
+      //    moves round to the blob's back. (Real splats use spherical harmonics.)
+      float behindAmount = 0.5 - 0.5 * dot(normalize(cameraPosition), uBlobForward);
+      vColor = mix(uFrontColor, uBackColor, behindAmount * uAngleColorAmount);
+    }`,
+  fragmentShader: /* glsl */ `
+    uniform float uOpacity;
+    varying vec2 vPositionInSigmas;
+    varying vec3 vColor;
+    void main() {
+      // Opacity falloff: α = o · exp(−½ xᵀ Σ⁻¹ x). Measured in σ units along the
+      // ellipse's own axes, xᵀ Σ⁻¹ x is just the squared distance from the centre.
+      float alpha = uOpacity * exp(-0.5 * dot(vPositionInSigmas, vPositionInSigmas));
+      if (alpha < 1.0 / 255.0) discard;
+      gl_FragColor = vec4(vColor, alpha);
+      #include <colorspace_fragment>
+    }`,
+});
+// One square, corners at ±1. The vertex shader moves its corners every frame.
+const splatQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), splatMaterial);
+splatQuad.frustumCulled = false;   // its real on-screen position comes from the shader
+scene.add(splatQuad);
+
+// Outline: three rings at 2 σ (where the fog has faded to ~14%) and the three axes.
+const outline = new THREE.Group();
+const ringPoints = Array.from({ length: 97 }, (_, i) => {
+  const angle = (i / 96) * Math.PI * 2;
+  return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
+});
+for (const ringRotation of [[0, 0, 0], [Math.PI / 2, 0, 0], [0, Math.PI / 2, 0]]) {
+  const ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPoints),
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthTest: false }));
+  ring.rotation.set(...ringRotation);
+  outline.add(ring);
+}
+for (const [direction, color] of [[[1, 0, 0], 0xff5a5a], [[0, 1, 0], 0x5adc78], [[0, 0, 1], 0x5a9bff]]) {
+  const axis = new THREE.Vector3(...direction);
+  outline.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([axis.clone().negate(), axis]),
+    new THREE.LineBasicMaterial({ color, depthTest: false })));
+}
+outline.renderOrder = 2;
+outline.traverse(line => { line.renderOrder = 2; });
+scene.add(outline);
+
+// --- Shape → covariance ------------------------------------------------------
+// Σ = R S Sᵀ Rᵀ: a ball (S = widths on the diagonal) stretched, then turned (R).
+// Files store widths + rotation rather than Σ itself because any widths and any
+// rotation always give a valid ellipsoid.
+function applyShape() {
+  const rotationMatrix = new THREE.Matrix3().setFromMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(blob.rotation));
+  const scaleMatrix = new THREE.Matrix3().set(blob.widths.x, 0, 0, 0, blob.widths.y, 0, 0, 0, blob.widths.z);
+  const rotationTimesScale = rotationMatrix.multiply(scaleMatrix);
+  uniforms.uCovariance3D.value.copy(rotationTimesScale.clone().multiply(rotationTimesScale.clone().transpose()));
+  uniforms.uBlobForward.value.set(0, 0, 1).applyQuaternion(blob.rotation);
+  uniforms.uFrontColor.value.copy(blob.frontColor);
+  uniforms.uBackColor.value.copy(blob.backColor);
+  uniforms.uOpacity.value = blob.opacity;
+  uniforms.uAngleColorAmount.value = options.angleColor ? 1 : 0;
+  outline.visible = options.outline;
+  outline.quaternion.copy(blob.rotation);
+  outline.scale.copy(blob.widths).multiplyScalar(2);
+
+  document.getElementById('widths').textContent = blob.widths.toArray().map(width => width.toFixed(2)).join(' · ');
+  for (const button of document.querySelectorAll('[data-preset]')) button.setAttribute('aria-pressed', String(button.dataset.preset === options.preset));
+  for (const button of document.querySelectorAll('[data-toggle]')) button.setAttribute('aria-pressed', String(options[button.dataset.toggle]));
+}
+
+function choosePreset(name) {
+  const preset = PRESETS[name];
+  options.preset = name;
+  blob.widths.set(...preset.widths);
+  const degrees = Math.PI / 180;
+  blob.rotation.setFromEuler(new THREE.Euler(0, preset.turnDegrees * degrees, preset.tiltDegrees * degrees, 'YZX'));
+  applyShape();
+}
+
+for (const button of document.querySelectorAll('[data-preset]')) button.addEventListener('click', () => choosePreset(button.dataset.preset));
+for (const button of document.querySelectorAll('[data-toggle]')) button.addEventListener('click', () => {
+  options[button.dataset.toggle] = !options[button.dataset.toggle];
+  applyShape();
+});
+
+// --- Size and draw -----------------------------------------------------------
+function resize() {
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.getDrawingBufferSize(uniforms.uViewportPixels.value);   // the shader works in real pixels
+}
+window.addEventListener('resize', resize);
+resize();
+choosePreset('ball');
+renderer.setAnimationLoop(() => {
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

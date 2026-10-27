@@ -1,0 +1,4 @@
+.DS_Store
+# The 3D files are downloaded by scripts/fetch-assets.mjs (or fetch_assets.py); only their list is in git.
+/assets/*
+!/assets/assets.json
