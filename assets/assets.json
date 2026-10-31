@@ -46,15 +46,15 @@
   "folders": [
     {
       "name": "robot-grandma",
-      "path": "widgets/robot-grandma-8dfcd7cf38",
-      "bytes": 30968321,
+      "path": "widgets/robot-grandma-9f40748458",
+      "bytes": 30967954,
       "licence": "Code MIT; the room CC0 1.0; bundled libraries and robot model: see LICENSES/ inside the folder",
       "credit": "Robot Grandma game by Sean Tey (packaged build); Unitree G1 model, MuJoCo, mjlab, three.js, Spark",
       "files": [
         {
           "path": "BUILD.txt",
           "bytes": 763,
-          "sha256": "916fdf64cd532d584311a3b69ae29eb77e51cfd59fac5d827fc0481908bf876e"
+          "sha256": "0df79940af32cbf2f5655c24b50aa29b8b3be0babbd702aaeafb867ca036de8d"
         },
         {
           "path": "LICENSES/MuJoCo-Apache-2.0.txt",
@@ -97,119 +97,119 @@
           "sha256": "4a27008aca1b3539911c14ecdf58c401c1e7dd0c698bfa2e973cb3d971386ab9"
         },
         {
-          "path": "g/code-63ddc15482/src/aim.js",
+          "path": "g/code-f8063bb103/src/aim.js",
           "bytes": 5194,
           "sha256": "ae7cc55fb61e687bfca42d1dd0d7e82b79be89f8bd5525041bd32764d77fbce4"
         },
         {
-          "path": "g/code-63ddc15482/src/arc.js",
+          "path": "g/code-f8063bb103/src/arc.js",
           "bytes": 3677,
           "sha256": "2a3dd39fec61bb7b8ae81dc5538e23cdb5bdb6d44e772099e98510331016cc52"
         },
         {
-          "path": "g/code-63ddc15482/src/bumper.js",
+          "path": "g/code-f8063bb103/src/bumper.js",
           "bytes": 17219,
           "sha256": "1734c4dde58cca75038a0a0fb1b5ce2dbba48a74183cc04b03fa291a359a0ea8"
         },
         {
-          "path": "g/code-63ddc15482/src/camera.js",
-          "bytes": 19346,
-          "sha256": "6058cca597b53e7af942bb6bfceb252d16e49154f3871e706211d81b1614cdf2"
+          "path": "g/code-f8063bb103/src/camera.js",
+          "bytes": 19325,
+          "sha256": "5d1c7077eabd381a4ac919ead64f2df9d375939c2b257639394513bf25471ed5"
         },
         {
-          "path": "g/code-63ddc15482/src/controls.js",
-          "bytes": 9585,
-          "sha256": "d613c281d777e59a29807bf51ee38e95ce17232f27813bd0f9dc9c8e5b237e22"
+          "path": "g/code-f8063bb103/src/controls.js",
+          "bytes": 9401,
+          "sha256": "7f68da67c9c9329ea883246b7575f261e80d70d98d009762cdeea74b3285081e"
         },
         {
-          "path": "g/code-63ddc15482/src/freekick.js",
+          "path": "g/code-f8063bb103/src/freekick.js",
           "bytes": 52709,
           "sha256": "c0830789e1fc5be128f4ddce22d1b9e6ae5a585545904ac949f9841ed818531d"
         },
         {
-          "path": "g/code-63ddc15482/src/game.js",
-          "bytes": 62421,
-          "sha256": "e072629d44831e730a37c22bb1c2c194c2f871b1cd86a88a8e8ddb9c1e0c087d"
+          "path": "g/code-f8063bb103/src/game.js",
+          "bytes": 62649,
+          "sha256": "c57c50cef6a9edccb180797cc490f452e5a68f9019440ce35f60daf700ce1285"
         },
         {
-          "path": "g/code-63ddc15482/src/jets.js",
+          "path": "g/code-f8063bb103/src/jets.js",
           "bytes": 11101,
           "sha256": "10ab6b8674567c6b3f16fb358ca57354551c708007a0c5c36bd107467b16ec42"
         },
         {
-          "path": "g/code-63ddc15482/src/kickgame.js",
-          "bytes": 56807,
-          "sha256": "7a7623b3d1f73525ffee1d0169dd03555b6d2b9236f28406ef9b7e9f2fd4f228"
+          "path": "g/code-f8063bb103/src/kickgame.js",
+          "bytes": 56616,
+          "sha256": "764ae3e01a9a368609b38e928c9a609344a1691ea7a0ccd3695530d5e9801f82"
         },
         {
-          "path": "g/code-63ddc15482/src/look.js",
+          "path": "g/code-f8063bb103/src/look.js",
           "bytes": 34000,
           "sha256": "40a3c512c5f46b2041c07a1a4b0e991e7eb5f67d5f169def37809f657aec4124"
         },
         {
-          "path": "g/code-63ddc15482/src/lsq.js",
+          "path": "g/code-f8063bb103/src/lsq.js",
           "bytes": 2085,
           "sha256": "5b0b3ee492e762a82ae056e9d746b6b8960d23c7038286ba1b9bfb39c60a1a3b"
         },
         {
-          "path": "g/code-63ddc15482/src/moves.js",
+          "path": "g/code-f8063bb103/src/moves.js",
           "bytes": 9872,
           "sha256": "5d4b532bae8f324f6e825cd6120042ca002cc7dc940e006a45d50d16bcfb1818"
         },
         {
-          "path": "g/code-63ddc15482/src/render.js",
+          "path": "g/code-f8063bb103/src/render.js",
           "bytes": 31557,
           "sha256": "d02fb65939b1e0119afe0f7fdb8e2731a7d06e03f1b347b3fa4920e15c4ef7f0"
         },
         {
-          "path": "g/code-63ddc15482/src/sim.js",
+          "path": "g/code-f8063bb103/src/sim.js",
           "bytes": 17174,
           "sha256": "1c001fc5fc4af6149e989243678a1a3e5a6a23b7c2b7bed856beeb0667ee8602"
         },
         {
-          "path": "g/code-63ddc15482/src/slowwalker.js",
+          "path": "g/code-f8063bb103/src/slowwalker.js",
           "bytes": 13055,
           "sha256": "622dc4be35ee67536ffb3984135d55668a6f062db7c680f41f95a077ebbb643a"
         },
         {
-          "path": "g/code-63ddc15482/src/soccerball.js",
+          "path": "g/code-f8063bb103/src/soccerball.js",
           "bytes": 5322,
           "sha256": "c7fb3d73ae2d9ff8a945b0c23c291506ac6247fa8b9d94b635fc648a5368542e"
         },
         {
-          "path": "g/code-63ddc15482/src/stand.js",
+          "path": "g/code-f8063bb103/src/stand.js",
           "bytes": 1347,
           "sha256": "8d48c7ba978e49016e2f63e904e2dfcae979ba9269eb757b65e06e2b62fd4fb8"
         },
         {
-          "path": "g/code-63ddc15482/src/trainedwalker.js",
+          "path": "g/code-f8063bb103/src/trainedwalker.js",
           "bytes": 23034,
           "sha256": "0115910369e93a14001936634b0ce7d38f35d4044b4b5c12e667c51f4583989d"
         },
         {
-          "path": "g/code-63ddc15482/src/transition.js",
+          "path": "g/code-f8063bb103/src/transition.js",
           "bytes": 2287,
           "sha256": "c4331d5ab8f022a131b3cce66b34b24c9fef93d6a26f7f0e8cde0ab62a38b114"
         },
         {
-          "path": "g/code-63ddc15482/src/ui-embed.js",
+          "path": "g/code-f8063bb103/src/ui-embed.js",
           "bytes": 1325,
           "sha256": "97e2998215a687d24748dc0546189482964142c4fca05bc739b7b3be255c902a"
         },
         {
-          "path": "g/code-63ddc15482/src/ui.js",
-          "bytes": 16478,
-          "sha256": "6cbfc06b19b1219fd1de559103eaca003579ed999c7a9d60225d20b694eca9ca"
+          "path": "g/code-f8063bb103/src/ui.js",
+          "bytes": 16303,
+          "sha256": "c9c296616a1406ed5be2fb577b22ceb8b70c01110a63fdb9595b78efe1db325b"
         },
         {
-          "path": "g/code-63ddc15482/src/wbc.js",
+          "path": "g/code-f8063bb103/src/wbc.js",
           "bytes": 10341,
           "sha256": "c40babcf580b12e56777077c216df0f26a544188fc82575d33ca6cb3b1f1a2e8"
         },
         {
-          "path": "g/code-63ddc15482/ui.css",
-          "bytes": 10430,
-          "sha256": "5c51f4cb6fa82b071b4d1a36986dbd64f0417ac1ef8e08803599a4f4c1c8fe29"
+          "path": "g/code-f8063bb103/ui.css",
+          "bytes": 10457,
+          "sha256": "0597cb60aec5ec98fc9e357c7d1f7451f6184aef7315644001df82d84b0dd7fc"
         },
         {
           "path": "g/data-34417d4e27/g1-hands-visual.rgmp",
@@ -333,13 +333,13 @@
         },
         {
           "path": "index.html",
-          "bytes": 9781,
-          "sha256": "28dca61dbea746e4d1d752d5c1c109c073f733a3119a580753f259c46386da02"
+          "bytes": 9730,
+          "sha256": "82bce1e602e05380658fc88fd7123e731e523aa0ad6ca3206d1ec06354865e4d"
         },
         {
           "path": "manifest.json",
           "bytes": 20954,
-          "sha256": "ce7ef95141ee6eb52ce88c1e8816ff0a5a7d9c11ed602e757389d5416dd02db5"
+          "sha256": "3d99663d43fc092167d1b56586a5209a3988306aa7145b323da1c17f51bfc381"
         },
         {
           "path": "probe.js",
